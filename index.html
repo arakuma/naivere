@@ -1,0 +1,53 @@
+﻿{% autoescape None %}
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Naive Regex</title>
+	<link rel="stylesheet" type="text/css" href="main.css" />
+	<script>
+		window.onload=function(){
+			var examples = document.getElementsByTagName("example");
+			var pattern = document.getElementById("pattern");
+			var string = document.getElementById("string");
+			for(var i = 0; i<examples.length;i++){
+				examples[i].onclick = function(){
+					var values = this.innerText.split(" - ");
+					pattern.value = values[0];
+					string.value = values[1];
+				}
+			}
+		};
+	</script>
+</head>
+<body>
+	<h1>Naive Regex Test</h1>
+	<div id="formArea">
+		<form action="/re/test/" method="post">
+			<input id="matches" type="hidden" name="matches" value="False"/>
+			<dl>
+			<dt>正则表达式</dt>
+				<dd><input id="pattern" name="pattern" value=""/></dd>
+			<dt>需要匹配的字符串</dt>
+				<dd><textarea id="string" style="width:380px; height:200px;" rows="20" cols="40" name="string" ></textarea></dd>
+			<dt>是否贪婪</dt>
+				<dd><input type="radio" name="is_greedy" value="True" checked="true" /> 是<input type="radio" name="is_greedy" value="False" /> 否</dd>
+			<dt></dt>
+				<dd>
+					<input type="submit" title="寻找一个匹配" value="寻找一个匹配"/>
+					<input type="submit" onclick="javascript:matches.value='True'" title="寻找多个匹配" value="寻找多个匹配"/>
+				</dd>
+			</dl>
+		</form>
+	</div>
+	<div id="examples">
+		<example>ap+[lmn]*e - I have an apple, you have two apples</example>
+		<example>a[a-c]d - dfsdfasdfsabdsdfsdf</example>
+		<example>no+[k-o]*k - noooooooooooooknook</example>
+	</div>
+	<div id="result" style="display:{% if pattern == '' %}none{% else %}block{% end %};">
+		<div style="width:100%">以正则 <span>{{pattern}}</span> 在 <span>{{string}}</span> 中寻找 <span>{% if matches == True %}多{% else %}单{% end %}</span> 个匹配，贪婪模式 <span>{{isGreedy}}</span></div>
+		
+		{{result}}
+	</div>
+</body>
+</html>

@@ -1,0 +1,10 @@
+body { background:#efefef; color:#333; font-size:16px; padding:20px 40px }
+example { margin:6px 8px; padding:8px 10px;background:#08c;color:white;display:block;cursor:pointer}
+
+h1 { font-size:26px; font-family:Georgia, serif}
+input,textarea {font-size:16px;}
+dd { -webkit-margin-start:0; margin-bottom:15px }
+#formArea { float:left;}
+#examples {width:50%;background:#ddd;float:left;margin-left:50px}
+#result {background:#ddd;color:#333;float:left;width:100%;font-size:12px; font-family: Courier; padding:10px}
+#result span, #result strong { color:#08c;}
