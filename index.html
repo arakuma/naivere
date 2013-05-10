@@ -1,0 +1,257 @@
+<!doctype html>
+<html>
+    <head>
+		<meta charset="utf-8" />
+        <title>Naive Regex Parser</title>
+        <link href="css/impress-demo.css" rel="stylesheet" />
+        <link href="css/custom.css" rel="stylesheet" />
+    </head>
+    <body>
+
+<div id="impress">
+
+	<div class="no-support-message" style="display:none;">
+		浏览器不支持impress.js，请用Firefox或Chrome浏览。
+	</div>
+
+	<div id="title" class="step" data-x="0" data-y="0" data-scale="4">
+		<!--<span class="try">词法分析基础</span>
+		<h1>编写正则表达式引擎</h1>-->
+		<span class="try">词法分析基础</span>
+        <h2>编写正则表达式引擎</h2>
+		<q style="float:right">by 司维 <a href="http://wei.si">wei.si</a></q>
+        <span class="footnote"> <a href="#/pre">预备知识</a> <a href="#/dev">构造</a> <a href="#/improve">改进?</a> <a href="#/ref">参考</a> <a href="test/">试试看</a></span> 
+		<q style="font-size:18px;width:100%;text-align:right;float:right;margin-top:100px">幻灯片使用<a href="http://bartaz.github.com/impress.js/">impress.js</a>制作</q>
+	</div>
+	
+	<div id="pre" class="step" data-x="-1300" data-y="1300" data-rotate="90">
+        <q>预备知识</q>
+		<ul>
+			<li>为什么写？</li>
+			<li>术语</li>
+			<li>算法</li>
+		</ul>
+    </div>
+	<div class="step" data-x="-1300" data-y="2300" data-rotate="90">
+        <q>预备知识/为什么写</q><br/>
+		<p class="normal">毫无疑问，这属于重复造轮子的行为</p>
+		<p class="normal">但也是区分“程序员”和“只是写代码的人”的基本标准之一</p>
+		<p class="normal">是词法分析的基础，为实现编程语言打基础</p>
+		<p class="normal">顺带一提，公认的标准有三个，亦称“三大浪漫”</p>
+		<ul>
+			<li>操作系统、编译器、Shader</li>
+		</ul>
+    </div>
+	<div class="step" data-x="-1300" data-y="3300" data-rotate="90">
+        <q>预备知识/术语</q><br/>
+		<ul>
+			<li>乔姆斯基层次结构</li>
+			<li>NFA: Nondeterministic finite automaton</li>
+			<li>DFA: Dondeterministic finite automaton</li>
+			<li>符号、转换、Epsilon</li>
+		</ul>
+    </div>
+	<div class="step" data-x="-1300" data-y="4300" data-rotate="90">
+        <q>预备知识/乔姆斯基层次结构</q><br/>
+		<table class="normal" style="font-family:Arial;text-align:center">
+		<tr>
+		<th>文法</th>
+		<th>语言</th>
+		<th>自动机</th>
+		<th>产生式规则</th>
+		</tr>
+		<tr>
+		<td>0-型</td>
+		<td>递归可枚举语言</td>
+		<td>图灵机</td>
+		<td>无限制</td>
+		</tr>
+		<tr>
+		<td>1-型</td>
+		<td>上下文相关语言</td>
+		<td>线性有界非确定图灵机</td>
+		<td>α<i>A</i>β -&gt; αγβ</td>
+		</tr>
+		<tr>
+		<td>2-型</td>
+		<td>上下文无关语言</td>
+		<td>非确定下推自动机</td>
+		<td><i>A</i> -&gt; γ</td>
+		</tr>
+		<tr>
+		<td>3-型</td>
+		<td>正规语言</td>
+		<td>有限状态自动机</td>
+		<td><i>A</i> -&gt; <i>aB</i><br />
+		<p><i>A</i> -&gt; <i>a</i></p>
+		</td>
+		</tr>
+		</table>
+    </div>
+	<div class="step" data-x="-1300" data-y="5300" data-rotate="90">
+        <q>预备知识/NFA</q><br/>
+		<p class="normal">非确定有穷自动机</p>
+		<p class="normal">NFA = { I, S, f(), S', s }</p>
+		<p class="normal">举例来说，对于a*b这个正则来说：</p>
+		<pre class="codeblock" style="margin-left:-150px">
+		|--------------------------------------------|
+		|          | a        | b        | epsilon   |
+		|--------------------------------------------|
+		| >S2      | -        | -        | S0,S3,    |
+		| S0       | S1,      | -        | -         |
+		| S3       | -        | -        | S4,       |
+		| S1       | -        | -        | S0,S3,    |
+		| S4       | -        | {S5},    | -         |
+		| {S5}     | -        | -        | -         |
+		|--------------------------------------------|
+		</pre>
+		<img src="nfastates.jpg" style="position:absolute;right:0;top:200px"/>
+    </div>
+	<div class="step" data-x="-1300" data-y="6300" data-rotate="90">
+        <q>预备知识/DFA</q><br/>
+		<p class="normal">确定有穷自动机</p>
+		<p class="normal">和NFA的区别？</p>
+			<ul>
+				<li>“确定”：对于任意S和I，有且只有一个转换</li>
+				<li>无Epsilon转换</li>
+			</ul>
+		<p class="normal">必要性：减小开销</p>
+		<p class="normal">对于每一个NFA必定有对应的DFA。<sup><a href="http://jpkc.nwpu.edu.cn/jp2005/20/kcwz/wlkc/wlkc/03/3_3_3.htm">证明:3.3.3 NFA与DFA的等价性</a><sup></p>
+		
+		<pre class="codeblock" style="margin-left:-150px">
+		|---------------------------------|
+		|          | a        | b         |
+		|---------------------------------|
+		| >S0      | S1,      | {S2},     |
+		| S1       | S1,      | {S2},     |
+		| {S2}     | -        | -         |
+		|---------------------------------|
+		</pre>
+		<img src="dfastates.jpg" style="position:absolute;right:50px;top:340px"/>
+    </div>
+	<div class="step" data-x="-1300" data-y="7300" data-rotate="90">
+        <q>预备知识/算法</q><br/>
+		<p class="normal">正则->NFA：<a href="http://en.wikipedia.org/wiki/Thompson's_construction_algorithm">Thompson's construction algorithm</a></p>
+		<p class="normal">NFA->DFA：<a href="http://en.wikipedia.org/wiki/Powerset_construction">Powerset construction</a></p>
+		<p class="normal">DFA最小化：<a href="http://en.wikipedia.org/wiki/Dfa_minimization#Hopcroft.27s_algorithm">Hopcroft's algorithm</a></p>
+    </div>
+	
+	<div id="dev" class="step" data-x="-300" data-y="1300" data-rotate="90">
+        <q>构造</q>
+		<ul>
+			<li>表达式验证和优化</li>
+			<li>构造NFA</li>
+			<li>构造DFA</li>
+			<li>优化DFA</li>
+			<li>输入匹配</li>
+		</ul>
+    </div>
+	<div class="step" data-x="-300" data-y="2300" data-rotate="90">
+        <q>构造/表达式验证和优化</q>
+		<p class="normal">验证：输入合法性检查和修整</p>
+		<ul>
+			<li>转义合法性（是否存在不可转义字符用了转义运算）</li>
+			<li>括号非空和成对出现</li>
+			<li>运算符完整</li>
+			<li>字符串合法</li>
+			<li>修整：添加连接运算符(.)、展开字符串范围运算</li>
+			<li>例：ap+[lmn]*e => a~p+~(l|m|n)*~e</li>
+		</ul>
+		<p class="normal">后缀表示法</p>
+		<ul>
+			<li>利用栈特性，为之后构造NFA提供便利</li>
+			<li>( 1 + 2 ) * 3 => 1 2 + 3 *</li>
+			<li>括号消除、运算分优先级重整</li>
+			<li>例：a~p+~(l|m|n)*~e => ap+~lm|n|*~e~</li>
+		</ul>
+    </div>
+	<div class="step" data-x="-300" data-y="3300" data-rotate="90">
+        <q>构造/构造NFA</q>
+		<p class="normal"><a href="http://en.wikipedia.org/wiki/Thompson's_construction_algorithm">Thompson's construction algorithm</a></p>
+		<p class="normal">三种基本运算的定义</p>
+		<ul>
+			<li>concat(.)：连接</li>
+			<li>alter(|)：选择</li>
+			<li>star(*)：零次或多次</li>
+		</ul>
+		<img src="thompsonops.jpg" style="position:absolute;right:-50px;top:40px"/>
+		<p class="normal">其余运算都可以从上述三种中推导出，例如</p>
+		<ul>
+			<li>+：一次或多次，a+ = a.a*</li>
+			<li>?：零次或一次，a? = a.epsilon</li>
+			<li>[]：范围，[a-c] = (a|b|c)</li>
+		</ul>
+		<p class="normal">验证和修整后的正则，遍历并生成States。以star为例：</p>
+		<pre class="codeblock" style="margin-left:-150px">
+                expA = nfaStack.pop()
+                exp = NfaExp()
+                expA.stateTo.addNextState(SYM_EPSILON, expA.stateFrom)
+                expA.stateTo.addNextState(SYM_EPSILON, exp.stateTo)
+                exp.stateFrom.addNextState(SYM_EPSILON, expA.stateFrom)
+                exp.stateFrom.addNextState(SYM_EPSILON, exp.stateTo)
+                nfaStack.append(exp)
+		</pre>
+    </div>
+	<div class="step" data-x="-300" data-y="4300" data-rotate="90">
+        <q>构造/构造DFA</q>
+		<p class="normal"><a href="http://en.wikipedia.org/wiki/Powerset_construction">Powerset construction</a></p>
+		<p class="normal">EXPSPACE问题，复杂度O(2<sup>p(n)</sup>)</p>
+		<p class="normal">基本思想：消除epsilon转换</p>
+		<p class="normal">概念：epsilon闭包</p>
+		<p class="normal">具体步骤</p>
+		<ul>
+			<li>1.对于新建的DFA State，获取它的Eplison闭包。将其加入DFA States集合</li>
+			<li>2.新建一个State作为初始DFA State，获取NFA初始State的Epsilon闭包，按照(1)处理</li>
+			<li>3.获取DFA States集合中一个没有标记走过的State</li>
+			<li>4.对于刚刚标记的State，获取它对应的闭包。对所有输入进行遍历，获取对应转换State集合。</li>
+			<li>5.对这个集合获取Epsilon闭包，反查它是否有对应的DFA State。没有的话新建一个。</li>
+			<li>6.以当前的输入创建从刚刚标记的State到这个State的转换。然后回到(3)</li>
+		</ul>
+    </div>
+	<div class="step" data-x="-300" data-y="5300" data-rotate="90">
+        <q>构造/优化DFA</q>
+		<p class="normal"><a href="http://en.wikipedia.org/wiki/Dfa_minimization#Hopcroft.27s_algorithm">Hopcroft's algorithm</a></p>
+		<p class="normal">基本思想：清除“没用”的State</p>
+		<ul>
+			<li>State并非终结状态，没有到其他状态的转换</li>
+			<li>重复的States</li>
+		</ul>
+    </div>
+	<div class="step" data-x="-300" data-y="6300" data-rotate="90">
+        <q>构造/输入匹配</q>
+		<p class="normal">输入驱动的匹配</p>
+		<p class="normal">遍历输入字符，应用到状态机</p>
+		<p class="normal">贪婪模式的处理：找到第一个匹配即返回</p>
+		<p class="normal">通配符的处理：直接走到状态机下一个State</p>
+    </div>
+	
+	<div id="improve" class="step" data-x="700" data-y="1300" data-rotate="90">
+        <q>改进?</q>
+		<ul>
+			<li>标题中的问号代表……可能性</li>
+			<li>更优的性能</li>
+			<li>更强大的功能（更多转义、分组、反向引用、零宽断言、注释……）</li>
+			<li>可扩展的词法分析（BNF文法表示）</li>
+		</ul>
+    </div>
+	
+	<div id="ref" class="step" data-x="1700" data-y="1300" data-rotate="90">
+        <q>参考资料</q>
+		<ul>
+			<li><a href="http://www.cppblog.com/vczh/archive/2008/05/22/50763.html">《构造正则表达式引擎》</a>，vczh</li>
+			<li><a href="http://www.codeproject.com/Articles/5412/Writing-own-regular-expression-parser">Writing own regular expression parser</a>, Amer Gerzic</li>
+			<li><a href="http://www.codeproject.com/Articles/28307/An-Implementation-of-Regular-Expression-Parser-in">An Implementation of Regular Expression Parser in C#</a>, Mizan Rahman</li>
+			<li><a href="http://book.douban.com/subject/2666375/">《Parsing Techniques》</a>,  Dick Grune / Ceriel J. H. Jacobs </li>
+		</ul>
+    </div>
+	
+	<div class="step" data-x="2700" data-y="1300" data-rotate="90">
+		<a href="test/" style="font-size:120px;">试试看</a>
+    </div>
+</div>
+
+    <script type="text/javascript" src="js/impress.js"></script>
+    <script>impress();</script>
+    </body>
+</html>
+
